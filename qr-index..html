@@ -1,0 +1,3486 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Offline QR Text Splitter</title><!--
+    ============================================================
+    OFFLINE QR TEXT SPLITTER
+    ============================================================
+
+    Put this HTML file in the same folder as:
+
+        qrcode.js
+
+    from:
+        https://github.com/kazuhikoarase/qrcode-generator
+
+    Then open this HTML file directly in your browser.
+
+    No internet connection is required.
+--><script src="qrcode.js"></script><style>
+
+/* ============================================================
+   COLORS
+   ============================================================ */
+
+:root {
+
+    --bg:
+        #101217;
+
+    --panel:
+        #191d25;
+
+    --panel2:
+        #232833;
+
+    --input:
+        #0c0f14;
+
+    --text:
+        #f3f5f8;
+
+    --muted:
+        #9da6b5;
+
+    --accent:
+        #5eead4;
+
+    --accent-hover:
+        #99f6e4;
+
+    --border:
+        #343a47;
+
+    --danger:
+        #fb7185;
+
+}
+
+
+/* ============================================================
+   GLOBAL
+   ============================================================ */
+
+* {
+    box-sizing: border-box;
+}
+
+
+html,
+body {
+
+    width:
+        100%;
+
+    height:
+        100%;
+
+    margin:
+        0;
+
+    background:
+        var(--bg);
+
+    color:
+        var(--text);
+
+    font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+
+body {
+
+    overflow:
+        hidden;
+}
+
+
+/* ============================================================
+   MAIN FIVE-BAND LAYOUT
+   ============================================================ */
+
+.app {
+
+    width:
+        100%;
+
+    height:
+        100vh;
+
+    display:
+        grid;
+
+    grid-template-rows:
+
+        auto
+        auto
+        minmax(230px, 1fr)
+        auto
+        minmax(180px, 35vh);
+
+    gap:
+        8px;
+
+    padding:
+        8px;
+}
+
+
+/* ============================================================
+   BAND 1 — TITLE
+   ============================================================ */
+
+.band-title {
+
+    display:
+        flex;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    padding:
+        8px;
+
+    background:
+        var(--panel);
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        12px;
+}
+
+
+.band-title h1 {
+
+    margin:
+        0;
+
+    font-size:
+        clamp(
+            20px,
+            3vw,
+            30px
+        );
+
+    letter-spacing:
+        -0.025em;
+}
+
+
+/* ============================================================
+   BAND 2 — CONTROLS
+   ============================================================ */
+
+.band-controls {
+
+    display:
+        flex;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    gap:
+        8px;
+
+    flex-wrap:
+        wrap;
+}
+
+
+/* ============================================================
+   PRIMARY BUTTON
+   ============================================================ */
+
+.primary-button {
+
+    border:
+        0;
+
+    border-radius:
+        10px;
+
+    padding:
+        10px 18px;
+
+    background:
+        var(--accent);
+
+    color:
+        #06201d;
+
+    font:
+        inherit;
+
+    font-weight:
+        750;
+
+    cursor:
+        pointer;
+
+    transition:
+        background .15s ease,
+        transform .1s ease;
+}
+
+
+.primary-button:hover {
+
+    background:
+        var(--accent-hover);
+}
+
+
+.primary-button:active {
+
+    transform:
+        scale(.97);
+}
+
+
+.primary-button:disabled {
+
+    opacity:
+        .5;
+
+    cursor:
+        wait;
+}
+
+
+/* ============================================================
+   SECONDARY BUTTON
+   ============================================================ */
+
+.secondary-button {
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        10px;
+
+    padding:
+        9px 13px;
+
+    background:
+        transparent;
+
+    color:
+        var(--muted);
+
+    font:
+        inherit;
+
+    font-weight:
+        600;
+
+    cursor:
+        pointer;
+
+    transition:
+        background .15s ease,
+        color .15s ease;
+}
+
+
+.secondary-button:hover {
+
+    background:
+        var(--panel);
+
+    color:
+        var(--text);
+}
+
+
+.secondary-button:active {
+
+    transform:
+        scale(.97);
+}
+
+
+.secondary-button:disabled {
+
+    opacity:
+        .5;
+
+    cursor:
+        wait;
+}
+
+
+/* ============================================================
+   PRIORITY SELECTOR
+   ============================================================ */
+
+.priority-box {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        8px;
+
+    padding:
+        5px 8px;
+
+    background:
+        var(--panel);
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        10px;
+}
+
+
+.priority-box label {
+
+    font-size:
+        12px;
+
+    color:
+        var(--muted);
+}
+
+
+.priority-box select {
+
+    border:
+        0;
+
+    outline:
+        0;
+
+    background:
+        transparent;
+
+    color:
+        var(--text);
+
+    cursor:
+        pointer;
+
+    font:
+        inherit;
+
+    font-weight:
+        650;
+}
+
+
+.priority-box option {
+
+    background:
+        var(--panel);
+
+    color:
+        var(--text);
+}
+
+
+/* ============================================================
+   ADVANCED SETTINGS
+   ============================================================ */
+
+.advanced {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        7px;
+
+    padding:
+        5px 8px;
+
+    background:
+        var(--panel);
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        10px;
+}
+
+
+.advanced label {
+
+    color:
+        var(--muted);
+
+    font-size:
+        11px;
+}
+
+
+.advanced select {
+
+    border:
+        0;
+
+    outline:
+        0;
+
+    background:
+        transparent;
+
+    color:
+        var(--text);
+
+    cursor:
+        pointer;
+
+    font:
+        inherit;
+
+    font-size:
+        12px;
+}
+
+
+.advanced option {
+
+    background:
+        var(--panel);
+
+    color:
+        var(--text);
+}
+
+
+/* ============================================================
+   BAND 3 — CAROUSEL
+   ============================================================ */
+
+.band-carousel {
+
+    min-height:
+        0;
+
+    overflow:
+        hidden;
+
+    background:
+        var(--panel);
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        12px;
+}
+
+
+.carousel {
+
+    width:
+        100%;
+
+    height:
+        100%;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        14px;
+
+    padding:
+        15px;
+
+    overflow-x:
+        auto;
+
+    overflow-y:
+        hidden;
+
+    scrollbar-width:
+        thin;
+
+    scrollbar-color:
+        #565d6b transparent;
+}
+
+
+.empty-message {
+
+    width:
+        100%;
+
+    text-align:
+        center;
+
+    color:
+        var(--muted);
+
+    line-height:
+        1.5;
+}
+
+
+/* ============================================================
+   QR CARD
+   ============================================================ */
+
+.qr-card {
+
+    flex:
+        0 0 auto;
+
+    width:
+        min(
+            310px,
+            80vw
+        );
+
+    height:
+        100%;
+
+    min-height:
+        200px;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    align-items:
+        center;
+
+    gap:
+        6px;
+
+    padding:
+        10px;
+
+    background:
+        var(--panel2);
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        12px;
+}
+
+
+.qr-header {
+
+    width:
+        100%;
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+}
+
+
+.qr-title {
+
+    font-size:
+        13px;
+
+    font-weight:
+        700;
+}
+
+
+.qr-meta {
+
+    font-size:
+        11px;
+
+    color:
+        var(--muted);
+}
+
+
+/* ============================================================
+   QR DISPLAY
+   ============================================================ */
+
+.qr-display {
+
+    flex:
+        1;
+
+    width:
+        100%;
+
+    min-height:
+        0;
+
+    display:
+        flex;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    padding:
+        8px;
+
+    background:
+        white;
+
+    border-radius:
+        6px;
+
+    overflow:
+        hidden;
+}
+
+
+.qr-display svg {
+
+    display:
+        block;
+
+    width:
+        auto;
+
+    height:
+        auto;
+
+    max-width:
+        100%;
+
+    max-height:
+        100%;
+}
+
+
+.qr-hidden {
+
+    width:
+        100%;
+
+    height:
+        100%;
+
+    display:
+        flex;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    color:
+        #89919f;
+
+    background:
+        repeating-linear-gradient(
+            45deg,
+            #1e222b,
+            #1e222b 10px,
+            #292f3a 10px,
+            #292f3a 20px
+        );
+
+    border-radius:
+        5px;
+}
+
+
+/* ============================================================
+   QR FOOTER
+   ============================================================ */
+
+.qr-footer {
+
+    width:
+        100%;
+
+    display:
+        flex;
+
+    gap:
+        6px;
+}
+
+
+.qr-button {
+
+    flex:
+        1;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        7px;
+
+    padding:
+        6px;
+
+    background:
+        #151820;
+
+    color:
+        var(--text);
+
+    cursor:
+        pointer;
+
+    font:
+        inherit;
+
+    font-size:
+        12px;
+}
+
+
+.qr-button:hover {
+
+    background:
+        #303641;
+}
+
+
+.qr-button.download {
+
+    color:
+        var(--accent);
+}
+
+
+/* ============================================================
+   BAND 4 — INFORMATION
+   ============================================================ */
+
+.band-info {
+
+    display:
+        flex;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    gap:
+        22px;
+
+    flex-wrap:
+        wrap;
+
+    padding:
+        7px 10px;
+
+    background:
+        var(--panel);
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        12px;
+
+    color:
+        var(--muted);
+
+    font-size:
+        13px;
+}
+
+
+.stat {
+
+    white-space:
+        nowrap;
+}
+
+
+.stat strong {
+
+    color:
+        var(--accent);
+
+    font-size:
+        15px;
+}
+
+
+.status {
+
+    color:
+        var(--muted);
+}
+
+
+.status.ok {
+
+    color:
+        var(--accent);
+}
+
+
+.status.error {
+
+    color:
+        var(--danger);
+}
+
+
+/* ============================================================
+   BAND 5 — TEXTAREA
+   ============================================================ */
+
+.band-textarea {
+
+    min-height:
+        0;
+
+    padding:
+        8px;
+
+    background:
+        var(--panel);
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius:
+        12px;
+}
+
+
+textarea {
+
+    width:
+        100%;
+
+    height:
+        100%;
+
+    min-height:
+        160px;
+
+    resize:
+        none;
+
+    border:
+        0;
+
+    outline:
+        0;
+
+    border-radius:
+        8px;
+
+    padding:
+        13px;
+
+    background:
+        var(--input);
+
+    color:
+        var(--text);
+
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        monospace;
+
+    font-size:
+        15px;
+
+    line-height:
+        1.5;
+}
+
+
+textarea::placeholder {
+
+    color:
+        #626a78;
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+    body {
+        overflow:
+            auto;
+    }
+
+
+    .app {
+
+        height:
+            auto;
+
+        min-height:
+            100vh;
+
+        grid-template-rows:
+
+            auto
+            auto
+            330px
+            auto
+            40vh;
+    }
+
+
+    .advanced {
+
+        display:
+            none;
+    }
+
+
+    .qr-card {
+
+        width:
+            260px;
+    }
+
+}
+
+</style></head><body><div class="app"><!-- ======================================================
+     BAND 1 — TITLE
+     ====================================================== -->
+
+<section class="band-title">
+
+    <h1>
+        Offline QR Text Splitter
+    </h1>
+
+</section>
+
+
+<!-- ======================================================
+     BAND 2 — CONTROLS
+     ====================================================== -->
+
+<section class="band-controls">
+
+
+    <!-- Main action -->
+
+    <button
+        id="generateButton"
+        class="primary-button"
+        type="button"
+    >
+        Generate QR Code(s)
+    </button>
+
+
+    <!-- Show / hide everything -->
+
+    <button
+        id="toggleAllButton"
+        class="secondary-button"
+        type="button"
+    >
+        Hide all
+    </button>
+
+
+    <!-- Small test button -->
+
+    <button
+        id="testButton"
+        class="secondary-button"
+        type="button"
+    >
+        Test
+    </button>
+
+
+    <!-- User-friendly priority -->
+
+    <div class="priority-box">
+
+        <label for="priority">
+            Priority
+        </label>
+
+        <select id="priority">
+
+            <option
+                value="easy"
+                selected
+            >
+                Easy to scan
+            </option>
+
+            <option value="balanced">
+                Balanced
+            </option>
+
+            <option value="compact">
+                Fewer QR codes
+            </option>
+
+            <option value="robust">
+                Maximum reliability
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <!-- Advanced options -->
+
+    <div class="advanced">
+
+        <label for="errorCorrection">
+            Recovery
+        </label>
+
+        <select id="errorCorrection">
+
+            <option value="L">
+                L
+            </option>
+
+            <option
+                value="M"
+                selected
+            >
+                M
+            </option>
+
+            <option value="Q">
+                Q
+            </option>
+
+            <option value="H">
+                H
+            </option>
+
+        </select>
+
+
+        <label for="maxVersion">
+            Max size
+        </label>
+
+        <select id="maxVersion">
+
+            <option value="7">
+                V7
+            </option>
+
+            <option value="10">
+                V10
+            </option>
+
+            <option
+                value="15"
+                selected
+            >
+                V15
+            </option>
+
+            <option value="20">
+                V20
+            </option>
+
+            <option value="30">
+                V30
+            </option>
+
+            <option value="40">
+                V40
+            </option>
+
+        </select>
+
+    </div>
+
+</section>
+
+
+<!-- ======================================================
+     BAND 3 — QR CAROUSEL
+     ====================================================== -->
+
+<section class="band-carousel">
+
+    <div
+        id="carousel"
+        class="carousel"
+    >
+
+        <div
+            class="empty-message"
+        >
+            Paste some text below, then generate the QR code(s).
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ======================================================
+     BAND 4 — INFORMATION
+     ====================================================== -->
+
+<section class="band-info">
+
+
+    <div class="stat">
+
+        Characters:
+
+        <strong id="characterCount">
+            0
+        </strong>
+
+    </div>
+
+
+    <div class="stat">
+
+        Expected time:
+
+        <strong id="expectedTime">
+            —
+        </strong>
+
+    </div>
+
+
+    <div class="stat">
+
+        Expected QR codes:
+
+        <strong id="expectedQRs">
+            0
+        </strong>
+
+    </div>
+
+
+    <div class="stat">
+
+        UTF-8:
+
+        <strong id="byteCount">
+            0
+        </strong>
+
+        bytes
+
+    </div>
+
+
+    <div
+        id="status"
+        class="status"
+    >
+        Ready
+    </div>
+
+</section>
+
+
+<!-- ======================================================
+     BAND 5 — TEXTAREA
+     ====================================================== -->
+
+<section class="band-textarea">
+
+    <textarea
+        id="textInput"
+        spellcheck="false"
+        placeholder="Type or paste text here..."
+    ></textarea>
+
+</section>
+
+</div><script>
+
+/* ============================================================
+   UTF-8 SUPPORT
+   ============================================================
+
+   qrcode-generator's default stringToBytes() implementation
+   is not suitable for arbitrary Unicode text.
+
+   We replace it with TextEncoder.
+
+   Examples:
+
+       "é"
+       "€"
+       "你好"
+       "こんにちは"
+       "😃"
+       "👨‍👩‍👧‍👦"
+
+   are converted into their correct UTF-8 byte sequences.
+
+   TextEncoder is built into modern browsers and requires
+   no additional library.
+   ============================================================ */
+
+if (
+    typeof TextEncoder === "undefined"
+) {
+
+    alert(
+        "This browser does not support TextEncoder. " +
+        "Please use a modern browser."
+    );
+
+}
+
+
+qrcode.stringToBytes =
+    function (text) {
+
+        return Array.from(
+            new TextEncoder()
+                .encode(text)
+        );
+
+    };
+
+
+/* ============================================================
+   USER-FRIENDLY PRIORITIES
+   ============================================================
+
+   These presets deliberately hide QR terminology from normal
+   users.
+
+   "Easy to scan"
+       Smaller symbols / fewer modules
+       More QR codes
+
+   "Balanced"
+       Middle ground
+
+   "Fewer QR codes"
+       Larger symbols
+       Lower error correction
+       Fewer QR codes
+
+   "Maximum reliability"
+       More error correction
+       Better resistance to damage/obstruction
+       More QR codes
+
+   Advanced settings can still override these values.
+   ============================================================ */
+
+const PRIORITIES = {
+
+    easy: {
+
+        maxVersion:
+            10,
+
+        errorCorrection:
+            "M",
+
+        safety:
+            0.78
+
+    },
+
+
+    balanced: {
+
+        maxVersion:
+            15,
+
+        errorCorrection:
+            "M",
+
+        safety:
+            0.88
+
+    },
+
+
+    compact: {
+
+        maxVersion:
+            25,
+
+        errorCorrection:
+            "L",
+
+        safety:
+            0.94
+
+    },
+
+
+    robust: {
+
+        maxVersion:
+            15,
+
+        errorCorrection:
+            "H",
+
+        safety:
+            0.78
+
+    }
+
+};
+
+
+/* ============================================================
+   APPROXIMATE BYTE CAPACITY
+   ============================================================
+
+   Byte-mode capacities for QR versions.
+
+   We deliberately use a safety factor below the theoretical
+   maximum.
+
+   This makes the resulting QR codes more comfortable to scan
+   and leaves room for the Byte-mode overhead.
+   ============================================================ */
+
+const BYTE_CAPACITY = {
+
+    1: {
+        L: 17,
+        M: 14,
+        Q: 11,
+        H: 7
+    },
+
+    2: {
+        L: 32,
+        M: 26,
+        Q: 20,
+        H: 14
+    },
+
+    3: {
+        L: 53,
+        M: 42,
+        Q: 32,
+        H: 24
+    },
+
+    4: {
+        L: 78,
+        M: 62,
+        Q: 46,
+        H: 34
+    },
+
+    5: {
+        L: 106,
+        M: 84,
+        Q: 60,
+        H: 44
+    },
+
+    6: {
+        L: 134,
+        M: 106,
+        Q: 74,
+        H: 58
+    },
+
+    7: {
+        L: 154,
+        M: 122,
+        Q: 86,
+        H: 64
+    },
+
+    8: {
+        L: 192,
+        M: 152,
+        Q: 108,
+        H: 84
+    },
+
+    9: {
+        L: 230,
+        M: 180,
+        Q: 130,
+        H: 98
+    },
+
+    10: {
+        L: 271,
+        M: 213,
+        Q: 151,
+        H: 119
+    },
+
+    11: {
+        L: 321,
+        M: 251,
+        Q: 177,
+        H: 137
+    },
+
+    12: {
+        L: 367,
+        M: 287,
+        Q: 203,
+        H: 155
+    },
+
+    13: {
+        L: 425,
+        M: 331,
+        Q: 241,
+        H: 177
+    },
+
+    14: {
+        L: 458,
+        M: 362,
+        Q: 258,
+        H: 194
+    },
+
+    15: {
+        L: 520,
+        M: 412,
+        Q: 292,
+        H: 220
+    },
+
+    16: {
+        L: 586,
+        M: 450,
+        Q: 322,
+        H: 250
+    },
+
+    17: {
+        L: 644,
+        M: 504,
+        Q: 364,
+        H: 280
+    },
+
+    18: {
+        L: 718,
+        M: 560,
+        Q: 394,
+        H: 310
+    },
+
+    19: {
+        L: 792,
+        M: 624,
+        Q: 442,
+        H: 338
+    },
+
+    20: {
+        L: 858,
+        M: 666,
+        Q: 482,
+        H: 382
+    },
+
+    21: {
+        L: 929,
+        M: 711,
+        Q: 509,
+        H: 403
+    },
+
+    22: {
+        L: 1003,
+        M: 779,
+        Q: 565,
+        H: 439
+    },
+
+    23: {
+        L: 1091,
+        M: 857,
+        Q: 611,
+        H: 461
+    },
+
+    24: {
+        L: 1171,
+        M: 911,
+        Q: 661,
+        H: 511
+    },
+
+    25: {
+        L: 1273,
+        M: 997,
+        Q: 715,
+        H: 535
+    },
+
+    26: {
+        L: 1367,
+        M: 1059,
+        Q: 751,
+        H: 593
+    },
+
+    27: {
+        L: 1465,
+        M: 1125,
+        Q: 805,
+        H: 625
+    },
+
+    28: {
+        L: 1528,
+        M: 1190,
+        Q: 868,
+        H: 658
+    },
+
+    29: {
+        L: 1628,
+        M: 1264,
+        Q: 908,
+        H: 698
+    },
+
+    30: {
+        L: 1732,
+        M: 1370,
+        Q: 982,
+        H: 742
+    },
+
+    31: {
+        L: 1840,
+        M: 1452,
+        Q: 1030,
+        H: 790
+    },
+
+    32: {
+        L: 1952,
+        M: 1538,
+        Q: 1112,
+        H: 842
+    },
+
+    33: {
+        L: 2071,
+        M: 1628,
+        Q: 1168,
+        H: 898
+    },
+
+    34: {
+        L: 2191,
+        M: 1722,
+        Q: 1228,
+        H: 958
+    },
+
+    35: {
+        L: 2306,
+        M: 1809,
+        Q: 1283,
+        H: 983
+    },
+
+    36: {
+        L: 2434,
+        M: 1911,
+        Q: 1351,
+        H: 1051
+    },
+
+    37: {
+        L: 2566,
+        M: 1989,
+        Q: 1423,
+        H: 1093
+    },
+
+    38: {
+        L: 2702,
+        M: 2099,
+        Q: 1499,
+        H: 1139
+    },
+
+    39: {
+        L: 2812,
+        M: 2213,
+        Q: 1579,
+        H: 1219
+    },
+
+    40: {
+        L: 2953,
+        M: 2331,
+        Q: 1663,
+        H: 1273
+    }
+
+};
+
+
+/* ============================================================
+   DOM ELEMENTS
+   ============================================================ */
+
+const textInput =
+    document.getElementById(
+        "textInput"
+    );
+
+const generateButton =
+    document.getElementById(
+        "generateButton"
+    );
+
+const toggleAllButton =
+    document.getElementById(
+        "toggleAllButton"
+    );
+
+const testButton =
+    document.getElementById(
+        "testButton"
+    );
+
+const priority =
+    document.getElementById(
+        "priority"
+    );
+
+const errorCorrection =
+    document.getElementById(
+        "errorCorrection"
+    );
+
+const maxVersion =
+    document.getElementById(
+        "maxVersion"
+    );
+
+const carousel =
+    document.getElementById(
+        "carousel"
+    );
+
+const characterCount =
+    document.getElementById(
+        "characterCount"
+    );
+
+const byteCount =
+    document.getElementById(
+        "byteCount"
+    );
+
+const expectedQRs =
+    document.getElementById(
+        "expectedQRs"
+    );
+
+const expectedTime =
+    document.getElementById(
+        "expectedTime"
+    );
+
+const status =
+    document.getElementById(
+        "status"
+    );
+
+
+/* ============================================================
+   STATE
+   ============================================================ */
+
+let allQRsHidden =
+    false;
+
+
+/*
+    Local performance calibration.
+
+    This is only stored in the browser.
+
+    It allows the expected-time estimate to become more useful
+    after the user has generated some QR batches.
+*/
+
+let calibration;
+
+
+try {
+
+    calibration =
+        JSON.parse(
+            localStorage.getItem(
+                "qrTextCalibration"
+            )
+        );
+
+} catch {
+
+    calibration =
+        null;
+
+}
+
+
+if (
+    !calibration ||
+    !Number.isFinite(
+        calibration.msPerQR
+    )
+) {
+
+    calibration = {
+
+        msPerQR:
+            120,
+
+        samples:
+            0
+
+    };
+
+}
+
+
+/* ============================================================
+   UTF-8 HELPERS
+   ============================================================ */
+
+const encoder =
+    new TextEncoder();
+
+
+function utf8Bytes(text) {
+
+    return encoder
+        .encode(text)
+        .length;
+
+}
+
+
+/*
+    Array.from() counts Unicode code points rather than UTF-16
+    code units.
+
+    Thus:
+
+        😃
+
+    counts as 1 character rather than 2.
+*/
+
+function characterCountValue(text) {
+
+    return Array
+        .from(text)
+        .length;
+
+}
+
+
+/* ============================================================
+   CURRENT CONFIGURATION
+   ============================================================ */
+
+function getConfig() {
+
+    return {
+
+        maxVersion:
+            Number(
+                maxVersion.value
+            ),
+
+        errorCorrection:
+            errorCorrection.value,
+
+        safety:
+            PRIORITIES[
+                priority.value
+            ].safety
+
+    };
+
+}
+
+
+/* ============================================================
+   EFFECTIVE CAPACITY
+   ============================================================ */
+
+function getEffectiveCapacity(
+    version,
+    level,
+    safety
+) {
+
+    const row =
+        BYTE_CAPACITY[
+            version
+        ];
+
+
+    if (!row) {
+        return 0;
+    }
+
+
+    const theoretical =
+        row[
+            level
+        ];
+
+
+    if (
+        !Number.isFinite(
+            theoretical
+        )
+    ) {
+
+        return 0;
+
+    }
+
+
+    return Math.max(
+        1,
+        Math.floor(
+            theoretical *
+            safety
+        )
+    );
+
+}
+
+
+/* ============================================================
+   CHUNK CAPACITY
+   ============================================================
+
+   We choose the largest configured version.
+
+   The resulting QR is still generated with version 0, which
+   tells qrcode-generator to select the smallest version capable
+   of holding the chunk.
+
+   This is useful:
+
+       - we don't generate QR codes just to find a split
+       - small chunks can use smaller QR versions
+       - large chunks can use larger versions
+   ============================================================ */
+
+function getChunkCapacity(
+    config
+) {
+
+    return getEffectiveCapacity(
+        config.maxVersion,
+        config.errorCorrection,
+        config.safety
+    );
+
+}
+
+
+/* ============================================================
+   ESTIMATE QR COUNT
+   ============================================================ */
+
+function estimateQRCount(
+    totalBytes,
+    config
+) {
+
+    if (
+        totalBytes === 0
+    ) {
+
+        return 0;
+
+    }
+
+
+    const capacity =
+        getChunkCapacity(
+            config
+        );
+
+
+    return Math.max(
+        1,
+        Math.ceil(
+            totalBytes /
+            capacity
+        )
+    );
+
+}
+
+
+/* ============================================================
+   VERSION COST
+   ============================================================ */
+
+function versionCost(
+    version
+) {
+
+    /*
+        QR module count:
+
+            21 + 4 × (version - 1)
+    */
+
+    const modules =
+        21 +
+        4 *
+        (
+            version - 1
+        );
+
+
+    const baseModules =
+        21 +
+        4 *
+        (
+            10 - 1
+        );
+
+
+    return (
+        modules *
+        modules
+    ) / (
+        baseModules *
+        baseModules
+    );
+
+}
+
+
+/* ============================================================
+   FORMAT DURATION
+   ============================================================ */
+
+function formatDuration(
+    milliseconds
+) {
+
+    if (
+        !Number.isFinite(
+            milliseconds
+        )
+    ) {
+
+        return "—";
+
+    }
+
+
+    if (
+        milliseconds < 1000
+    ) {
+
+        return "<1 sec";
+
+    }
+
+
+    const seconds =
+        milliseconds /
+        1000;
+
+
+    if (
+        seconds < 60
+    ) {
+
+        return (
+            Math.ceil(
+                seconds
+            ) +
+            " sec"
+        );
+
+    }
+
+
+    const minutes =
+        Math.floor(
+            seconds / 60
+        );
+
+
+    const remaining =
+        Math.round(
+            seconds % 60
+        );
+
+
+    return (
+        `${minutes}m ${remaining}s`
+    );
+
+}
+
+
+/* ============================================================
+   EXPECTED GENERATION TIME
+   ============================================================ */
+
+function estimateGenerationTime(
+    qrCount,
+    config
+) {
+
+    /*
+        The initial calibration is deliberately conservative.
+
+        After actual generation, the user's own measured timing
+        becomes the basis for future estimates.
+    */
+
+    const perQR =
+        calibration.msPerQR *
+        versionCost(
+            config.maxVersion
+        );
+
+
+    return (
+        qrCount *
+        perQR
+    );
+
+}
+
+
+/* ============================================================
+   UPDATE COUNTERS
+   ============================================================ */
+
+function updateExpectations() {
+
+    const text =
+        textInput.value;
+
+
+    const chars =
+        characterCountValue(
+            text
+        );
+
+
+    const bytes =
+        utf8Bytes(
+            text
+        );
+
+
+    characterCount.textContent =
+        chars.toLocaleString();
+
+
+    byteCount.textContent =
+        bytes.toLocaleString();
+
+
+    const config =
+        getConfig();
+
+
+    const count =
+        estimateQRCount(
+            bytes,
+            config
+        );
+
+
+    expectedQRs.textContent =
+        count.toLocaleString();
+
+
+    /*
+        If the user hasn't typed anything, there is no estimate.
+    */
+
+    if (
+        count === 0
+    ) {
+
+        expectedTime.textContent =
+            "—";
+
+        return;
+
+    }
+
+
+    expectedTime.textContent =
+        formatDuration(
+            estimateGenerationTime(
+                count,
+                config
+            )
+        );
+
+}
+
+
+/* ============================================================
+   PRIORITY PRESETS
+   ============================================================ */
+
+function applyPriority() {
+
+    const selected =
+        PRIORITIES[
+            priority.value
+        ];
+
+
+    errorCorrection.value =
+        selected.errorCorrection;
+
+
+    maxVersion.value =
+        selected.maxVersion;
+
+}
+
+
+/* ============================================================
+   SPLIT TEXT BY UTF-8 BYTES
+   ============================================================
+
+   This function NEVER splits in the middle of a Unicode code
+   point.
+
+   For example, the four UTF-8 bytes representing 😃 remain
+   together.
+
+   This is important because splitting UTF-8 arbitrarily could
+   create invalid text.
+   ============================================================ */
+
+function splitTextFast(
+    text,
+    config
+) {
+
+    if (!text) {
+
+        return [];
+
+    }
+
+
+    const capacity =
+        getChunkCapacity(
+            config
+        );
+
+
+    const chunks =
+        [];
+
+
+    let position =
+        0;
+
+
+    while (
+        position <
+        text.length
+    ) {
+
+        let index =
+            position;
+
+
+        let bytes =
+            0;
+
+
+        while (
+            index <
+            text.length
+        ) {
+
+            const codePoint =
+                text.codePointAt(
+                    index
+                );
+
+
+            const character =
+                String.fromCodePoint(
+                    codePoint
+                );
+
+
+            const characterBytes =
+                utf8Bytes(
+                    character
+                );
+
+
+            if (
+                bytes +
+                characterBytes >
+                capacity
+            ) {
+
+                break;
+
+            }
+
+
+            bytes +=
+                characterBytes;
+
+
+            index +=
+                character.length;
+
+        }
+
+
+        /*
+            Protection against an impossible situation.
+        */
+
+        if (
+            index ===
+            position
+        ) {
+
+            throw new Error(
+                "A character is too large for the selected QR capacity."
+            );
+
+        }
+
+
+        chunks.push(
+            text.slice(
+                position,
+                index
+            )
+        );
+
+
+        position =
+            index;
+
+    }
+
+
+    return chunks;
+
+}
+
+
+/* ============================================================
+   CREATE ACTUAL QR
+   ============================================================ */
+
+function createQR(
+    text,
+    config
+) {
+
+    /*
+        Type 0 tells qrcode-generator to automatically select
+        the smallest QR version capable of holding the data.
+    */
+
+    const qr =
+        qrcode(
+            0,
+            config.errorCorrection
+        );
+
+
+    /*
+        Byte mode is essential.
+
+        Our UTF-8 stringToBytes() implementation above converts
+        JavaScript Unicode text into actual UTF-8 bytes.
+    */
+
+    qr.addData(
+        text,
+        "Byte"
+    );
+
+
+    qr.make();
+
+
+    const actualVersion =
+        (
+            qr.getModuleCount() -
+            17
+        ) / 4;
+
+
+    if (
+        actualVersion >
+        config.maxVersion
+    ) {
+
+        return null;
+
+    }
+
+
+    return qr;
+
+}
+
+
+/* ============================================================
+   RENDER ONE QR CARD
+   ============================================================ */
+
+function renderQRCard(
+    item,
+    part,
+    total
+) {
+
+    const card =
+        document.createElement(
+            "div"
+        );
+
+
+    card.className =
+        "qr-card";
+
+
+    /* --------------------------------------------------------
+       Header
+       -------------------------------------------------------- */
+
+    const header =
+        document.createElement(
+            "div"
+        );
+
+
+    header.className =
+        "qr-header";
+
+
+    const title =
+        document.createElement(
+            "div"
+        );
+
+
+    title.className =
+        "qr-title";
+
+
+    title.textContent =
+        `QR ${part} / ${total}`;
+
+
+    const version =
+        (
+            item.qr
+                .getModuleCount() -
+            17
+        ) / 4;
+
+
+    const meta =
+        document.createElement(
+            "div"
+        );
+
+
+    meta.className =
+        "qr-meta";
+
+
+    meta.textContent =
+        `V${version} · ${item.errorCorrection}`;
+
+
+    header.appendChild(
+        title
+    );
+
+
+    header.appendChild(
+        meta
+    );
+
+
+    /* --------------------------------------------------------
+       QR display
+       -------------------------------------------------------- */
+
+    const display =
+        document.createElement(
+            "div"
+        );
+
+
+    display.className =
+        "qr-display";
+
+
+    const svg =
+        item.qr.createSvgTag({
+            cellSize:
+                5,
+
+            margin:
+                4,
+
+            scalable:
+                true
+        });
+
+
+    display.innerHTML =
+        svg;
+
+
+    /*
+        Store the generated SVG.
+
+        Hiding/showing a QR therefore doesn't regenerate it.
+    */
+
+    display.dataset.svg =
+        display.innerHTML;
+
+
+    display.dataset.hidden =
+        "false";
+
+
+    /* --------------------------------------------------------
+       Chunk information
+       -------------------------------------------------------- */
+
+    const info =
+        document.createElement(
+            "div"
+        );
+
+
+    info.className =
+        "qr-meta";
+
+
+    info.textContent =
+        `${characterCountValue(
+            item.text
+        ).toLocaleString()} chars · ` +
+        `${utf8Bytes(
+            item.text
+        ).toLocaleString()} bytes`;
+
+
+    /* --------------------------------------------------------
+       Footer
+       -------------------------------------------------------- */
+
+    const footer =
+        document.createElement(
+            "div"
+        );
+
+
+    footer.className =
+        "qr-footer";
+
+
+    /* --------------------------------------------------------
+       Individual hide/show button
+       -------------------------------------------------------- */
+
+    const hideButton =
+        document.createElement(
+            "button"
+        );
+
+
+    hideButton.className =
+        "qr-button";
+
+
+    hideButton.textContent =
+        "Hide QR";
+
+
+    hideButton.addEventListener(
+        "click",
+        () => {
+
+            const hidden =
+                display.dataset.hidden ===
+                "true";
+
+
+            if (hidden) {
+
+                display.innerHTML =
+                    display.dataset.svg;
+
+
+                display.dataset.hidden =
+                    "false";
+
+
+                hideButton.textContent =
+                    "Hide QR";
+
+            } else {
+
+                display.innerHTML =
+                    "";
+
+
+                const hiddenBox =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                hiddenBox.className =
+                    "qr-hidden";
+
+
+                hiddenBox.textContent =
+                    "QR hidden";
+
+
+                display.appendChild(
+                    hiddenBox
+                );
+
+
+                display.dataset.hidden =
+                    "true";
+
+
+                hideButton.textContent =
+                    "Show QR";
+
+            }
+
+        }
+    );
+
+
+    /* --------------------------------------------------------
+       Download SVG button
+       -------------------------------------------------------- */
+
+    const downloadButton =
+        document.createElement(
+            "button"
+        );
+
+
+    downloadButton.className =
+        "qr-button download";
+
+
+    downloadButton.textContent =
+        "Download";
+
+
+    downloadButton.addEventListener(
+        "click",
+        () => {
+
+            const svgElement =
+                display.querySelector(
+                    "svg"
+                );
+
+
+            /*
+                If this particular QR is hidden, restore it
+                temporarily from the stored SVG.
+            */
+
+            let temporarySVG =
+                null;
+
+
+            if (!svgElement) {
+
+                const temporary =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                temporary.innerHTML =
+                    display.dataset.svg;
+
+
+                temporarySVG =
+                    temporary.querySelector(
+                        "svg"
+                    );
+
+            }
+
+
+            const target =
+                svgElement ||
+                temporarySVG;
+
+
+            if (!target) {
+
+                return;
+
+            }
+
+
+            const source =
+                new XMLSerializer()
+                    .serializeToString(
+                        target
+                    );
+
+
+            const blob =
+                new Blob(
+                    [source],
+                    {
+                        type:
+                            "image/svg+xml"
+                    }
+                );
+
+
+            const url =
+                URL.createObjectURL(
+                    blob
+                );
+
+
+            const link =
+                document.createElement(
+                    "a"
+                );
+
+
+            link.href =
+                url;
+
+
+            link.download =
+                `qr-${part}-of-${total}.svg`;
+
+
+            document.body.appendChild(
+                link
+            );
+
+
+            link.click();
+
+
+            link.remove();
+
+
+            URL.revokeObjectURL(
+                url
+            );
+
+        }
+    );
+
+
+    footer.appendChild(
+        hideButton
+    );
+
+
+    footer.appendChild(
+        downloadButton
+    );
+
+
+    card.appendChild(
+        header
+    );
+
+
+    card.appendChild(
+        display
+    );
+
+
+    card.appendChild(
+        info
+    );
+
+
+    card.appendChild(
+        footer
+    );
+
+
+    carousel.appendChild(
+        card
+    );
+
+}
+
+
+/* ============================================================
+   GENERATE QR CODES
+   ============================================================ */
+
+generateButton.addEventListener(
+    "click",
+    async () => {
+
+        const text =
+            textInput.value;
+
+
+        if (!text) {
+
+            status.textContent =
+                "Enter some text first.";
+
+            status.className =
+                "status error";
+
+            return;
+
+        }
+
+
+        generateButton.disabled =
+            true;
+
+
+        toggleAllButton.disabled =
+            true;
+
+
+        testButton.disabled =
+            true;
+
+
+        /*
+            The expected-time field is intentionally NOT changed
+            after generation.
+
+            It remains the estimate.
+
+            The actual generation duration is shown in the status:
+                Generated in X sec.
+        */
+
+        const started =
+            performance.now();
+
+
+        try {
+
+            const config =
+                getConfig();
+
+
+            /* ------------------------------------------------
+               FAST SPLIT
+               ------------------------------------------------ */
+
+            status.textContent =
+                "Splitting text…";
+
+            status.className =
+                "status";
+
+
+            const chunks =
+                splitTextFast(
+                    text,
+                    config
+                );
+
+
+            expectedQRs.textContent =
+                chunks.length
+                    .toLocaleString();
+
+
+            /*
+                Reset carousel.
+            */
+
+            carousel.innerHTML =
+                "";
+
+
+            const verified =
+                [];
+
+
+            /* ------------------------------------------------
+               ACTUAL QR GENERATION
+               ------------------------------------------------ */
+
+            for (
+                let i = 0;
+                i < chunks.length;
+                i++
+            ) {
+
+                const part =
+                    i + 1;
+
+
+                const qr =
+                    createQR(
+                        chunks[i],
+                        config
+                    );
+
+
+                if (!qr) {
+
+                    throw new Error(
+                        "A text chunk does not fit the selected QR size. " +
+                        "Try 'Easy to scan' or increase the maximum size."
+                    );
+
+                }
+
+
+                verified.push({
+
+                    text:
+                        chunks[i],
+
+                    qr:
+                        qr,
+
+                    errorCorrection:
+                        config.errorCorrection
+
+                });
+
+
+                status.textContent =
+                    `Generating ${part} / ${chunks.length}…`;
+
+
+                /*
+                    Yield to the browser.
+
+                    This keeps the interface responsive and allows
+                    the status message to update.
+                */
+
+                await new Promise(
+                    resolve =>
+                        setTimeout(
+                            resolve,
+                            0
+                        )
+                );
+
+            }
+
+
+            /* ------------------------------------------------
+               RENDER
+               ------------------------------------------------ */
+
+            status.textContent =
+                "Rendering…";
+
+
+            for (
+                let i = 0;
+                i < verified.length;
+                i++
+            ) {
+
+                renderQRCard(
+                    verified[i],
+                    i + 1,
+                    verified.length
+                );
+
+
+                await new Promise(
+                    resolve =>
+                        setTimeout(
+                            resolve,
+                            0
+                        )
+                );
+
+            }
+
+
+            /* ------------------------------------------------
+               MEASURE ACTUAL GENERATION TIME
+               ------------------------------------------------ */
+
+            const elapsed =
+                performance.now() -
+                started;
+
+
+            /*
+                Determine average actual QR version.
+            */
+
+            let versionSum =
+                0;
+
+
+            for (
+                const item of verified
+            ) {
+
+                versionSum +=
+                    (
+                        item.qr
+                            .getModuleCount() -
+                        17
+                    ) / 4;
+
+            }
+
+
+            const averageVersion =
+                versionSum /
+                verified.length;
+
+
+            /*
+                Update local calibration for FUTURE estimates.
+
+                We do NOT change expectedTime here.
+            */
+
+            updateCalibration(
+                elapsed,
+                verified.length,
+                averageVersion
+            );
+
+
+            /*
+                The actual elapsed time is deliberately displayed
+                only in the status.
+            */
+
+            status.textContent =
+                `Generated in ${formatDuration(
+                    elapsed
+                )}.`;
+
+
+            status.className =
+                "status ok";
+
+
+            /*
+                Newly generated QRs are visible.
+            */
+
+            allQRsHidden =
+                false;
+
+
+            toggleAllButton.textContent =
+                "Hide all";
+
+
+        } catch (error) {
+
+            console.error(
+                error
+            );
+
+
+            status.textContent =
+                error.message ||
+                "QR generation failed.";
+
+            status.className =
+                "status error";
+
+
+        } finally {
+
+            generateButton.disabled =
+                false;
+
+            toggleAllButton.disabled =
+                false;
+
+            testButton.disabled =
+                false;
+
+        }
+
+    }
+);
+
+
+/* ============================================================
+   CALIBRATION
+   ============================================================ */
+
+function updateCalibration(
+    elapsedMilliseconds,
+    count,
+    averageVersion
+) {
+
+    if (
+        count <= 0 ||
+        !Number.isFinite(
+            averageVersion
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    const normalized =
+        elapsedMilliseconds /
+        (
+            count *
+            versionCost(
+                averageVersion
+            )
+        );
+
+
+    if (
+        !Number.isFinite(
+            normalized
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+        Exponential moving average.
+
+        New measurements matter, but older measurements aren't
+        discarded completely.
+    */
+
+    const alpha =
+        0.35;
+
+
+    calibration.msPerQR =
+        (
+            calibration.msPerQR *
+            (
+                1 - alpha
+            )
+        ) +
+        (
+            normalized *
+            alpha
+        );
+
+
+    calibration.samples++;
+
+
+    try {
+
+        localStorage.setItem(
+            "qrTextCalibration",
+            JSON.stringify(
+                calibration
+            )
+        );
+
+    } catch {
+
+        /*
+            Calibration is optional.
+        */
+
+    }
+
+}
+
+
+/* ============================================================
+   SHOW / HIDE ALL
+   ============================================================ */
+
+toggleAllButton.addEventListener(
+    "click",
+    () => {
+
+        const displays =
+            carousel.querySelectorAll(
+                ".qr-display"
+            );
+
+
+        if (
+            displays.length === 0
+        ) {
+
+            return;
+
+        }
+
+
+        allQRsHidden =
+            !allQRsHidden;
+
+
+        displays.forEach(
+            display => {
+
+                const card =
+                    display.closest(
+                        ".qr-card"
+                    );
+
+
+                if (!card) {
+                    return;
+                }
+
+
+                const hideButton =
+                    card.querySelector(
+                        ".qr-button"
+                    );
+
+
+                if (
+                    allQRsHidden
+                ) {
+
+                    /*
+                        Store original SVG if necessary.
+                    */
+
+                    if (
+                        !display.dataset.svg
+                    ) {
+
+                        display.dataset.svg =
+                            display.innerHTML;
+
+                    }
+
+
+                    display.innerHTML =
+                        "";
+
+
+                    const hiddenBox =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    hiddenBox.className =
+                        "qr-hidden";
+
+
+                    hiddenBox.textContent =
+                        "QR hidden";
+
+
+                    display.appendChild(
+                        hiddenBox
+                    );
+
+
+                    display.dataset.hidden =
+                        "true";
+
+
+                    if (hideButton) {
+
+                        hideButton.textContent =
+                            "Show QR";
+
+                    }
+
+                } else {
+
+                    display.innerHTML =
+                        display.dataset.svg;
+
+
+                    display.dataset.hidden =
+                        "false";
+
+
+                    if (hideButton) {
+
+                        hideButton.textContent =
+                            "Hide QR";
+
+                    }
+
+                }
+
+            }
+        );
+
+
+        toggleAllButton.textContent =
+            allQRsHidden
+                ? "Show all"
+                : "Hide all";
+
+    }
+);
+
+
+/* ============================================================
+   TEST BUTTON
+   ============================================================ */
+
+testButton.addEventListener(
+    "click",
+    () => {
+
+        /*
+            Test text deliberately contains:
+
+                ASCII
+                accented characters
+                emoji
+                CJK
+
+            so it is also a quick Unicode test.
+        */
+
+        const testText =
+            "Hello 😃 — café — 你好 — Привет";
+
+
+        const config =
+            getConfig();
+
+
+        const qr =
+            createQR(
+                testText,
+                config
+            );
+
+
+        if (!qr) {
+
+            status.textContent =
+                "Test QR does not fit the selected settings.";
+
+            status.className =
+                "status error";
+
+            return;
+
+        }
+
+
+        carousel.innerHTML =
+            "";
+
+
+        renderQRCard(
+            {
+                text:
+                    testText,
+
+                qr:
+                    qr,
+
+                errorCorrection:
+                    config.errorCorrection
+
+            },
+
+            1,
+
+            1
+        );
+
+
+        characterCount.textContent =
+            characterCountValue(
+                testText
+            ).toLocaleString();
+
+
+        byteCount.textContent =
+            utf8Bytes(
+                testText
+            ).toLocaleString();
+
+
+        expectedQRs.textContent =
+            "1";
+
+
+        expectedTime.textContent =
+            "<1 sec";
+
+
+        allQRsHidden =
+            false;
+
+
+        toggleAllButton.textContent =
+            "Hide all";
+
+
+        status.textContent =
+            "Test QR ready — scan it to verify Unicode support.";
+
+        status.className =
+            "status ok";
+
+    }
+);
+
+
+/* ============================================================
+   INPUT / SETTING EVENTS
+   ============================================================ */
+
+textInput.addEventListener(
+    "input",
+    updateExpectations
+);
+
+
+priority.addEventListener(
+    "change",
+    () => {
+
+        applyPriority();
+
+        updateExpectations();
+
+    }
+);
+
+
+errorCorrection.addEventListener(
+    "change",
+    updateExpectations
+);
+
+
+maxVersion.addEventListener(
+    "change",
+    updateExpectations
+);
+
+
+/* ============================================================
+   INITIALIZATION
+   ============================================================ */
+
+applyPriority();
+
+updateExpectations();
+
+</script></body>
+</html>
